@@ -1,0 +1,219 @@
+직종관리
+
+hr.vo
+	job.java
+		id, title, minSalary, maxSalary 필드
+		getter/setter
+
+hr.dao
+	jobDao.java
+		List<Job> getAlljobs()
+		job getJobById(String jobId)
+
+직종목록(job/list.jsp)
+	모든 직종정보를 조회한다.
+	조회된 직종정보를 직종목록을 응답으로 제공한다.
+
+
+직종상세(job/detail.jsp)
+	요청파라미터로 전달받은 직종아이디를 조회한다.
+	직종아이디에 해당하는 직종 상세정보를 조회한다.
+	조회된 직종상세정보로 직종아이디, 직종제목, 최소급여, 최대급여를 응답으로 제공한다.
+
+
+1. job/list.jsp구현하기
+	-직종목록화면에서 출력에 사용되는 값을 확인한다.
+	* 모든직종의 직종아이디와 직종제목이 활용된다. <--- 모든직종정보를 조회하는 데이터베이스 엑세스 필요
+	* 직종정보를 표현하는 vo클래스를 정의한다.
+	* 직종정보 조회를 담당하는 Dao 클래스를 정의한다.
+	* Dao 클래스에 모든 직종정보를 조회해서 반환하는 메소드를 구현한다.
+	- list.jsp에서 모든직종정보를 조회해서 응답으로 제공하기
+	 * 모든 직종정보를 제공하는 기능이 구현된 Dao 객체를 생성한다.
+	 * 생성된 Dao객체에서 모든 직종정보를 제공하는 메소드를 실행하고, 반환된 값을 변수에 대입한다.
+	 * 향상된 for문을 사용해서 직종 목록을 출력한다.
+
+
+직종관리
+	구현할 내용
+		직종목록 제공 -> job/list.jsp
+		 
+		직종상세 제공 -> job/detail.jsp
+
+직종 목록 제공 - > job/list.jsp
+	1.화면확인
+		+ 모든 직종이 출력된다.
+		+ 링크를 클릭하면 detail.jsp를 요청한다.
+		+ 링크를 클릭했을떄 detail.jsp?id=xxx를요청한다.
+		결론 ) 
+			+ 모든 직종정보를 조회해야한다.
+			+ 직종제목, 직종아이디가 필요하다.
+			+ 모든 테이블 조인없이 JOBS테이블만 조회하면된다.(별도의 DTO클래스를 작성할 필요없다)
+	2.모든 직종목록 조회
+		+ 직종테이블 확인한다.
+			+ 테이블 이름, 컬럼명, 데이터타입을 확인
+		+ 테이블의 한 행을 표현하는 vo객체를 생성한다.
+
+			public class job{
+				private String id;
+				private String title;
+				private int minSalary;
+				private int maxSalary;
+
+				//getter, setter 메소드정의
+				// toString 메소드 재정의
+}
+		+ JOBS 테이블에 대한 CRUD작업을 담당하는 DAO클래스를 생성한다.
+				public class JobDao{
+ 		}
+
+		+ JobDao 클래스에 모든 직종정보를 반환하는 메소드를 구현한다.
+			public class JobDao{
+				public List<job> getAlljobs(){
+					String sql = """
+						select *
+						from jobs
+						order by job_id asc
+					""";
+					return JdbcTemplate.selectList(sql, rs-> {
+						Job job =new Job(); 
+						job.setId(rs.getString("job_id"));
+						job.setTitle(rs.getString ("job_title"));
+
+						return job;
+
+				})'
+			}
+
+
+
+		+ list.jsp가 모든 직종 정보를 제공하도록 구현하기
+			+ 직종정보에 대한 CRUD 작업이 구현된 JobDao객체를 생성한다.
+				JobDao jobDao = new JobDao();
+			+ JobDao객체에서 모든 직종 정보를 반환하는 메소드를 실행고,
+			  메도가 반환하는 모든 직종 정보를 List<job> 타입 변수에 대입한다.
+				List<job> jobs = jobDao.getAllJobs();
+			+ 조회된 모든 직종 정보로 링크를 생성해서 응답으로 보낸다.
+				<%
+					for (Job job : jobs) {
+				%>
+					<li>
+					<a href="detail.jsp?id="<%=job.getId() %>">
+						<%=job.getTitle() %>
+					</a>
+				<%		
+					}
+				%>
+
+	직종상세정보 제공 - job/detail.jsp
+			+화면확인
+				+ 특정 직종의 상세정보가 표현한다.
+					+직종아이디, 직종제목, 최저급여, 최대급여가 필요하다.
+					+ 조인없이 JOBS테이블에서 조회가능하다.
+			 	+ 특정 직종의 상세정보가 제공되어야 하기 때문에 직종목록에서 어떤 직종을 클릭했는지 알아야한다.
+					+ 직종아이디값이 요청파라미터로 전달되어야한다.
+			+ 지정된 직종아이디의 직종 상세 정보 조회하기
+				+ JobDao클래스에 특정 직종아이디의 직종상세정보를 제공하는 메소드 구현하기
+					public Job getJobById(String jobId) {
+						String sql = """
+							select *
+							from jobs
+							where job_id =?
+						""";
+
+						return JdbcTemplate.selectOne(sql, rs-> {
+							Job job = new Job();
+							job.setId(rs.getString("job_id"));
+							job.setTitle(rs.getString("job_title"));
+							job.setMinSalary(rs.getInt("min_salary"));
+							job.setMaxSalary(rs.getInt("max_salary"));
+			
+								return job;
+						}, jobId);
+					}
+					* 직종아이디는 기본키 컬럼이기 떄문에 직종아이디를 조회조건으로 사용하면 언제나 
+					  직종정보가 하나 조회되거나 하나도 조회되지 않은 경우만 있다.
+					   즉, 복수개 조회되지 않으므로 반환타입이 List<Job>이 아니다.
+
+			+ detail.jsp에서 특정 직종아이디의 직종 상세정보를 응답으로 제공하기
+				+detail.jsp를 요청하는 요청 URL확인하기
+					요청URL : http://localhost/sample/hr/job/detail.jsp?id=xxx
+				+ 쿼리스트링으로 전달된 요청 파라미터 값 조회하기 - 직종아이디 획득
+					String jobId = request.getParameter("jobId");
+				+JOBS 테이블에 대한 CRUD 작업이 구현된 JobDao객체를 생성한다.
+					JobDao jobDao = new JobDao();
+				+ 특정 직종아이디에 해당하는 메소드를 실행해서 직종 상세정보를 획득하고,
+				  job타입의 변수에 대입한다.
+					Job job = jobDao.getJobById(jobId);
+				+ 조회된 직종 상시정보를 표현식을 사용해서 응답컨텐츠에 포함시킨다.
+
+					<dl>
+						<dt>아이디</dt><dd><%=job.getId() %></dd>
+						<dt>제목</dt><dd><%=job.gettitle() %></dd>
+						<dt>최저급여</dt><dd><%= jobgetMinSalary()></dd>
+						<dt>최고급여</dt><dd><%= jobgetMaxSalary()></dd>
+
+
+					</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				
+	 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		
+
+
+
+
+
+
+
