@@ -29,14 +29,14 @@ public class EmployeeDao {
 				""";
 		
 		JdbcTemplate.insert(sql,emp.getFitstName(),
-								emp.getLastName(),
-								emp.getEmail(),
-								emp.getPhoneNumber(),
-								emp.getHireDate(),
-								emp.getJobId(),
-								emp.getSalary(),
-								emp.getCommissionPct(),
-								emp.getDepartmentId());
+			emp.getLastName(),
+			emp.getEmail(),
+			emp.getPhoneNumber(),
+			emp.getHireDate(),
+			emp.getJobId(),
+			emp.getSalary(),
+			emp.getCommissionPct(),
+			emp.getDepartmentId());
 		
 	}
 	
@@ -45,11 +45,11 @@ public class EmployeeDao {
 		
 		String sql = """
 			SELECT X.EMPLOYEE_ID,
-				   X.FIRST_NAME,
-				   X.PHONE_NUMBER,
-				   X.HIRE_DATE,
-                   X.JOB_ID,
-                   D.DEPARTMENT_NAME
+			       X.FIRST_NAME,
+		               X.PHONE_NUMBER,
+			       X.HIRE_DATE,
+                               X.JOB_ID,
+                               D.DEPARTMENT_NAME
        
 			FROM (SELECT 
 				  ROW_NUMBER() over (order by EMPLOYEE_ID DESC) NUM,
