@@ -12,9 +12,9 @@ public class JobDao {
 	public List<Job> getAllJobs(){
 		String sql="""
 				SELECT JOB_ID, 
-						JOB_TITLE,
-						MIN_SALARY,
-						MAX_SALARY
+				JOB_TITLE,
+				MIN_SALARY,
+				MAX_SALARY
 				FROM
 					JOBS
 				""";
